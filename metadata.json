@@ -1,0 +1,6 @@
+{
+  "name": "HHGoa '26 ID Card Generator",
+  "description": "Official Hacker House Goa 2026 ID card and event frame generator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

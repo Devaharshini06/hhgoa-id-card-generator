@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="12" fill="#004D2C" />
+  <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="#FFE500" stroke-width="4" />
+  <rect x="12" y="12" width="22" height="22" rx="3" fill="#FF007A" />
+  <text x="23" y="28" font-family="'JetBrains Mono', system-ui, sans-serif" font-weight="900" font-style="italic" font-size="13" fill="#FFFFFF" text-anchor="middle">HH</text>
+  <rect x="12" y="38" width="40" height="14" rx="3" fill="#FFE500" />
+  <text x="32" y="48" font-family="'JetBrains Mono', system-ui, sans-serif" font-weight="900" font-size="9" fill="#004D2C" text-anchor="middle" letter-spacing="1">GOA'26</text>
+  <circle cx="44" cy="21" r="7" fill="#FFE500" stroke="#004D2C" stroke-width="2" />
+  <circle cx="44" cy="19" r="2.5" fill="#004D2C" />
+  <path d="M39 27 C 39 24, 49 24, 49 27" stroke="#004D2C" stroke-width="1.8" fill="none" />
+</svg>

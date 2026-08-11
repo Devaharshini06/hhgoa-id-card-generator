@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .font-serif-display {
+    font-family: 'Playfair Display', 'Rozha One', 'Cinzel', serif;
+  }
+  .font-cinzel {
+    font-family: 'Cinzel', 'Cinzel Decorative', serif;
+  }
+  .font-devanagari {
+    font-family: 'Gotu', 'Rozha One', sans-serif;
+  }
+  .font-mono-tech {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .font-syne {
+    font-family: 'Syne', sans-serif;
+  }
+  .font-sans-ui {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+
+  /* Paper & Screen-print Texture Overlay */
+  .bg-print-texture {
+    background-image: radial-gradient(rgba(255, 229, 0, 0.08) 1px, transparent 0);
+    background-size: 16px 16px;
+  }
+
+  .bg-noise-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  /* Dotted & Ornamental Frames */
+  .border-dotted-yellow {
+    border-style: dotted;
+    border-color: #FFE500;
+  }
+
+  .border-dashed-yellow {
+    border-style: dashed;
+    border-color: #FFE500;
+  }
+
+  /* Devanagari text stroke effect for "गोवा" badge */
+  .text-stroke-yellow {
+    -webkit-text-stroke: 1.5px #FFE500;
+  }
+
+  .text-stroke-pink {
+    -webkit-text-stroke: 1.5px #FF007A;
+  }
+
+  /* Custom Glow / Retro Shadows */
+  .shadow-retro-yellow {
+    box-shadow: 4px 4px 0px 0px #FFE500;
+  }
+  .shadow-retro-pink {
+    box-shadow: 4px 4px 0px 0px #FF007A;
+  }
+  .shadow-retro-dark {
+    box-shadow: 6px 6px 0px 0px #041D15;
+  }
+}
+
+/* Custom Scrollbar for Hacker Aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #041D15;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #006B3C;
+  border: 1px solid #FFE500;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FFE500;
+}
+
