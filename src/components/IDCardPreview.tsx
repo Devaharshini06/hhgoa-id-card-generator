@@ -8,16 +8,78 @@ interface IDCardPreviewProps {
   frameStyle: FrameStyleId;
   organizerConfig: OrganizerConfig;
   aspectRatio?: AspectRatioMode;
+  onPhotoChange?: (updates: { photoOffsetX?: number; photoOffsetY?: number }) => void;
 }
 
 export const IDCardPreview = forwardRef<HTMLDivElement, IDCardPreviewProps>(
-  ({ participant, frameStyle, organizerConfig, aspectRatio = 'standard' }, ref) => {
+  ({ participant, frameStyle, organizerConfig, aspectRatio = 'standard', onPhotoChange }, ref) => {
     const avatarImage =
       participant.profileImage ||
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400';
 
+    const [isDraggingPhoto, setIsDraggingPhoto] = React.useState(false);
+    const dragStartRef = React.useRef<{ x: number; y: number; initialX: number; initialY: number } | null>(null);
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+      e.preventDefault();
+      setIsDraggingPhoto(true);
+      dragStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        initialX: participant.photoOffsetX || 0,
+        initialY: participant.photoOffsetY || 0,
+      };
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+      if (!isDraggingPhoto || !dragStartRef.current || !onPhotoChange) return;
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      onPhotoChange({
+        photoOffsetX: Math.round(dragStartRef.current.initialX + dx),
+        photoOffsetY: Math.round(dragStartRef.current.initialY + dy),
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingPhoto(false);
+      dragStartRef.current = null;
+    };
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      setIsDraggingPhoto(true);
+      dragStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        initialX: participant.photoOffsetX || 0,
+        initialY: participant.photoOffsetY || 0,
+      };
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+      if (!isDraggingPhoto || !dragStartRef.current || !onPhotoChange || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - dragStartRef.current.x;
+      const dy = e.touches[0].clientY - dragStartRef.current.y;
+      onPhotoChange({
+        photoOffsetX: Math.round(dragStartRef.current.initialX + dx),
+        photoOffsetY: Math.round(dragStartRef.current.initialY + dy),
+      });
+    };
+
+    const handleTouchEnd = () => {
+      setIsDraggingPhoto(false);
+      dragStartRef.current = null;
+    };
+
     // Outer aspect ratio styling
     const getCardDimensions = () => {
+      if (participant.passType === 'squad') {
+        return 'w-[440px] min-h-[620px]'; // Squad Pass Badge
+      }
+      if (participant.graphicFormat === 'pfp') {
+        return 'w-[420px] h-[420px]'; // 1:1 PFP Frame
+      }
       switch (aspectRatio) {
         case 'story':
           return 'w-[360px] h-[640px]'; // 9:16
@@ -457,7 +519,204 @@ export const IDCardPreview = forwardRef<HTMLDivElement, IDCardPreviewProps>(
       </div>
     );
 
+    /* =========================================================================
+       6. FORMAT A: PFP FRAME / PROFILE OVERLAY
+       Square 1:1 format specially designed for X (Twitter) profile pictures.
+       ========================================================================= */
+    const renderPfpFrame = () => {
+      const zoom = (participant.photoZoom || 100) / 100;
+      const offsetX = participant.photoOffsetX || 0;
+      const offsetY = participant.photoOffsetY || 0;
+
+      return (
+        <div className="relative w-full h-full bg-[#004D2C] text-[#FFE500] p-4 flex flex-col items-center justify-between overflow-hidden font-sans-ui select-none border-4 border-[#FFE500] shadow-[8px_8px_0px_#FF007A]">
+          {/* Outer Dotted Frame & Corner Accents */}
+          <div className="absolute inset-2 border-2 border-dashed border-[#FFE500] rounded-2xl pointer-events-none z-10" />
+
+          {/* Top Header Label */}
+          <div className="relative z-20 w-full flex items-center justify-between text-[10px] font-mono-tech font-bold text-[#FFE500] px-1 pt-1">
+            <span className="tracking-widest uppercase">{organizerConfig.eventName || 'HACKER HOUSE GOA'}</span>
+            <span className="bg-[#FF007A] text-white font-black px-2 py-0.5 rounded text-[9px] uppercase shadow-sm">
+              2026 PFP FRAME
+            </span>
+          </div>
+
+          {/* Center Profile Photo Frame Ring */}
+          <div className="relative z-20 my-auto flex flex-col items-center justify-center">
+            {/* Outer Decorative Ring */}
+            <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full p-2 bg-[#003820] border-4 border-[#FFE500] shadow-[0_0_20px_rgba(255,229,0,0.3)] flex items-center justify-center">
+              {/* Inner Avatar Container with interactive drag support */}
+              <div
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className={`w-full h-full rounded-full overflow-hidden border-2 border-[#FF007A] relative bg-[#092F24] touch-none ${
+                  isDraggingPhoto ? 'cursor-grabbing' : 'cursor-grab'
+                }`}
+                title="💡 Drag inside the circle to position your photo."
+              >
+                <img
+                  src={avatarImage}
+                  alt={participant.name}
+                  className="w-full h-full object-cover pointer-events-none select-none"
+                  style={{
+                    transform: `scale(${zoom}) translate(${offsetX}px, ${offsetY}px)`,
+                  }}
+                />
+
+                {/* Subtle drag hint overlay inside circle */}
+                <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                  <span className="bg-black/80 text-[#FFE500] text-[10px] font-mono-tech font-bold px-2 py-1 rounded shadow">
+                    Drag to adjust
+                  </span>
+                </div>
+              </div>
+
+              {/* Devanagari "गोवा" Badge overlay at bottom right of circle */}
+              <div className="absolute -bottom-1 -right-1 z-30 bg-[#FFE500] text-[#FF007A] border-2 border-[#FF007A] text-xl font-devanagari font-black px-3 py-0.5 rounded-full shadow-[3px_3px_0px_#000] transform -rotate-6 pointer-events-none">
+                {organizerConfig.eventSubName}
+              </div>
+
+              {/* Verified Stamp at top left */}
+              <div className="absolute -top-1 -left-1 z-30 bg-[#FF007A] text-white text-[9px] font-mono-tech font-black px-2 py-0.5 rounded border border-[#FFE500] transform -rotate-12 shadow-[2px_2px_0px_#000] pointer-events-none">
+                GOA '26
+              </div>
+            </div>
+
+            {/* Drag helper hint requested by user */}
+            <div className="mt-2 text-[10px] font-mono-tech text-[#FFE500] bg-[#003820] px-3 py-1 rounded-full border border-[#FFE500]/50 shadow-sm flex items-center gap-1.5 pointer-events-none">
+              <span>💡 Drag inside the circle to position your photo.</span>
+            </div>
+          </div>
+
+          {/* Bottom Branding & Handle Bar */}
+          <div className="relative z-20 w-full bg-[#003820] border-2 border-[#FFE500] rounded-xl p-2 text-center shadow-[3px_3px_0px_#000]">
+            <div className="text-sm font-serif-display font-black text-[#FFE500] uppercase tracking-wider truncate">
+              {participant.name || 'Hacker Name'}
+            </div>
+            <div className="text-[10px] font-mono-tech font-bold text-[#FF007A] flex items-center justify-center gap-2">
+              <span>{participant.handle || '@builder'}</span>
+              <span>•</span>
+              <span className="text-[#00FF66]">{participant.role || 'HH Goa Builder'}</span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const renderSquadPass = () => {
+      const members = (participant.squadMembers && participant.squadMembers.length > 0)
+        ? participant.squadMembers
+        : [
+            {
+              id: 'm1',
+              name: participant.name || 'Hacker 1',
+              handle: participant.handle || '@builder',
+              role: participant.role || 'Lead Dev',
+              profileImage: participant.profileImage,
+            },
+          ];
+
+      const squadName = participant.squadName || 'CyberGoa Squad';
+      const squadId = participant.squadId || 'SQD-GOA-709';
+
+      return (
+        <div
+          className="relative w-full h-full bg-[#004D2C] text-[#FFE500] p-5 flex flex-col justify-between overflow-hidden font-sans-ui border-4 border-[#FFE500] shadow-[8px_8px_0px_#FF007A] select-none rounded-xl"
+        >
+          {/* Outer Border Frame */}
+          <div className="absolute inset-2 border-2 border-dashed border-[#FFE500]/60 rounded-xl pointer-events-none z-10" />
+
+          {/* Header */}
+          <div className="relative z-20 flex items-center justify-between border-b-2 border-[#FFE500] pb-2">
+            <div>
+              <div className="text-[10px] font-mono-tech font-black tracking-widest text-[#FF007A] uppercase flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-[#FFE500]" /> {organizerConfig.eventName || 'HACKER HOUSE GOA'}
+              </div>
+              <h2 className="text-xl font-serif-display font-black text-[#FFE500] uppercase tracking-wider mt-0.5">
+                {squadName}
+              </h2>
+            </div>
+            <div className="text-right">
+              <span className="inline-block bg-[#FF007A] text-white text-[10px] font-mono-tech font-black px-2.5 py-1 rounded shadow-[2px_2px_0px_#000] uppercase border border-[#FFE500]">
+                SQUAD PASS
+              </span>
+              <div className="text-[10px] font-mono-tech text-[#00FF66] font-bold mt-1">
+                {squadId}
+              </div>
+            </div>
+          </div>
+
+          {/* Squad Members Container (Max 3) */}
+          <div className="relative z-20 my-auto py-2 space-y-2.5">
+            <div className="text-[10px] font-mono-tech font-bold uppercase text-[#FFF5C7]/80 text-center tracking-widest flex items-center justify-center gap-2">
+              <span>SQUAD MEMBERS ({members.length}/3 MAX)</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5">
+              {members.map((member, index) => (
+                <div
+                  key={member.id || index}
+                  className="bg-[#003820] border-2 border-[#FFE500] rounded-lg p-2.5 flex items-center gap-3 shadow-[3px_3px_0px_#000] relative overflow-hidden"
+                >
+                  {/* Member Photo */}
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[#FF007A] bg-[#092F24] shrink-0">
+                    <img
+                      src={member.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'}
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Member Details */}
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-mono-tech font-black text-[#FFE500] truncate">
+                        {member.name || `Member ${index + 1}`}
+                      </span>
+                      <span className="text-[9px] font-mono-tech font-bold bg-[#FF007A] text-white px-1.5 py-0.2 rounded uppercase shrink-0">
+                        MEMBER 0{index + 1}
+                      </span>
+                    </div>
+                    <div className="text-[10px] font-sans-ui text-[#FFF5C7]/90 truncate">
+                      {member.handle || '@builder'}
+                    </div>
+                    <div className="text-[9px] font-mono-tech text-[#00FF66] font-bold truncate">
+                      {member.role || 'HH Goa Builder'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer Branding & Event Stamp */}
+          <div className="relative z-20 border-t-2 border-[#FFE500] pt-2 flex items-center justify-between text-[10px] font-mono-tech">
+            <div className="text-left">
+              <span className="text-[#FFE500] font-bold block">GOA, INDIA • OCT 2026</span>
+              <span className="text-[#FFF5C7]/70 text-[9px]">OFFICIAL SQUAD PASS</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="bg-[#FFE500] text-[#004D2C] text-[10px] font-black px-2 py-0.5 rounded uppercase shadow-sm">
+                PASS #{participant.hackerId || 'HH26-SQD'}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     const renderCardByStyle = () => {
+      if (participant.passType === 'squad') {
+        return renderSquadPass();
+      }
+      if (participant.graphicFormat === 'pfp') {
+        return renderPfpFrame();
+      }
       switch (frameStyle) {
         case 'hacker-mode':
           return renderHackerMode();

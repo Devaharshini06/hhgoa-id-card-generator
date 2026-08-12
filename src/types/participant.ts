@@ -4,6 +4,21 @@ export type QRTarget = 'github' | 'portfolio' | 'linkedin';
 
 export type AspectRatioMode = 'standard' | 'story' | 'square';
 
+export type GraphicFormat = 'card' | 'pfp'; // Format B (Card) vs Format A (PFP Frame)
+
+export type PassType = 'solo' | 'squad';
+
+export interface SquadMember {
+  id: string;
+  name: string;
+  handle: string;
+  role: string;
+  profileImage: string | null;
+  photoZoom?: number;
+  photoOffsetX?: number;
+  photoOffsetY?: number;
+}
+
 export interface ParticipantData {
   name: string;
   handle: string;
@@ -19,6 +34,15 @@ export interface ParticipantData {
   currentlyBuilding?: string;
   hackerId: string;
   qrTarget: QRTarget;
+  graphicFormat?: GraphicFormat;
+  photoZoom?: number;
+  photoOffsetX?: number;
+  photoOffsetY?: number;
+  // Squad Pass attributes
+  passType?: PassType;
+  squadName?: string;
+  squadId?: string;
+  squadMembers?: SquadMember[];
 }
 
 export interface FrameStyleConfig {

@@ -28,6 +28,32 @@ const DEFAULT_PARTICIPANT: ParticipantData = {
   currentlyBuilding: 'Autonomous AI Agents',
   hackerId: 'HH26-ALE-88F1',
   qrTarget: 'portfolio',
+  passType: 'solo',
+  squadName: 'CyberGoa Hackers',
+  squadId: 'SQD-GOA-709',
+  squadMembers: [
+    {
+      id: 'mem_1',
+      name: 'Alex Rivera',
+      handle: '@alexrivera',
+      role: 'Lead Dev',
+      profileImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400',
+    },
+    {
+      id: 'mem_2',
+      name: 'Priya Sharma',
+      handle: '@priyacodes',
+      role: 'AI Architect',
+      profileImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400',
+    },
+    {
+      id: 'mem_3',
+      name: 'Rohan Verma',
+      handle: '@rohanv',
+      role: 'Full Stack',
+      profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400',
+    },
+  ],
 };
 
 export default function App() {
@@ -176,6 +202,9 @@ export default function App() {
                   onCopyCard={handleCopyCard}
                   onReset={handleReset}
                   participantName={participant.name}
+                  hackerId={participant.hackerId}
+                  cardRef={cardRef}
+                  showToast={showToast}
                 />
               </div>
 
@@ -224,6 +253,7 @@ export default function App() {
                         frameStyle={selectedFrameId}
                         organizerConfig={organizerConfig}
                         aspectRatio={aspectRatio}
+                        onPhotoChange={handleParticipantChange}
                       />
                     </div>
                   </div>

@@ -34,6 +34,48 @@ export async function exportCardAsPng(
   }
 }
 
+export async function getCardBlob(element: HTMLElement, highRes: boolean = false): Promise<Blob | null> {
+  try {
+    const scale = highRes ? 3 : 2;
+    const blob = await toBlob(element, {
+      pixelRatio: scale,
+      cacheBust: true,
+      quality: 0.98,
+      backgroundColor: '#006B3C',
+      fontEmbedCSS: '',
+      style: {
+        transform: 'scale(1)',
+        transformOrigin: 'top left'
+      }
+    });
+    return blob;
+  } catch (error) {
+    console.error('Failed to get card Blob:', error);
+    return null;
+  }
+}
+
+export async function getCardDataUrl(element: HTMLElement, highRes: boolean = false): Promise<string | null> {
+  try {
+    const scale = highRes ? 3 : 2;
+    const dataUrl = await toPng(element, {
+      pixelRatio: scale,
+      cacheBust: true,
+      quality: 0.98,
+      backgroundColor: '#006B3C',
+      fontEmbedCSS: '',
+      style: {
+        transform: 'scale(1)',
+        transformOrigin: 'top left'
+      }
+    });
+    return dataUrl;
+  } catch (error) {
+    console.error('Failed to get card DataUrl:', error);
+    return null;
+  }
+}
+
 export async function copyCardToClipboard(element: HTMLElement): Promise<boolean> {
   try {
     const blob = await toBlob(element, {

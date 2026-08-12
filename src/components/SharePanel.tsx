@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Download, Share2, Copy, Check, RotateCcw, Sparkles, Image, ShieldCheck, X } from 'lucide-react';
+import { Download, Share2, Copy, Check, RotateCcw, Sparkles, Image, ShieldCheck, X, Loader2 } from 'lucide-react';
+import { getCardBlob, getCardDataUrl } from '../utils/exportCard';
 
 interface SharePanelProps {
   onDownloadPng: (highRes: boolean) => Promise<void>;
   onCopyCard: () => Promise<void>;
   onReset: () => void;
   participantName: string;
+  hackerId?: string;
+  cardRef: React.RefObject<HTMLDivElement | null>;
+  showToast: (msg: string) => void;
 }
 
 export const SharePanel: React.FC<SharePanelProps> = ({
@@ -14,14 +18,26 @@ export const SharePanel: React.FC<SharePanelProps> = ({
   onCopyCard,
   onReset,
   participantName,
+  hackerId,
+  cardRef,
+  showToast,
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCaption, setCopiedCaption] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [shareCaption, setShareCaption] = useState(
-    `I've officially entered Hacker House Goa '26. 🌴💻\nSee you in Goa.`
-  );
+
+  const buildCaption = (name: string, id?: string) => {
+    const formattedId = id ? (id.startsWith('#') ? id : `#${id}`) : '#HH-GOA-3696';
+    return `Built my Hacker Goa House Builder Card!\n\n👤 ${name || 'Hacker'}\n🪪 Builder ID: ${formattedId}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\nhttps://hhgoa-id-card-generator-beta.vercel.app/\n\n#FrameInGoa #HHGoa2026`;
+  };
+
+  const [shareCaption, setShareCaption] = useState(() => buildCaption(participantName, hackerId));
+
+  React.useEffect(() => {
+    setShareCaption(buildCaption(participantName, hackerId));
+  }, [participantName, hackerId]);
 
   const triggerConfetti = () => {
     confetti({
@@ -30,6 +46,12 @@ export const SharePanel: React.FC<SharePanelProps> = ({
       origin: { y: 0.6 },
       colors: ['#FFE500', '#FF007A', '#00FF66', '#FFF5C7'],
     });
+  };
+
+  const handleShareToX = () => {
+    triggerConfetti();
+    const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareCaption)}`;
+    window.open(tweetUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleDownload = async (highRes: boolean) => {
@@ -142,7 +164,16 @@ export const SharePanel: React.FC<SharePanelProps> = ({
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
+              {/* Direct Tweet to X */}
+              <button
+                onClick={handleShareToX}
+                className="w-full py-3 rounded bg-[#000000] border-2 border-[#FFE500] text-[#FFE500] font-mono-tech font-black text-xs hover:bg-[#FFE500] hover:text-[#000000] transition-all flex items-center justify-center gap-2 shadow-[3px_3px_0px_#FF007A]"
+              >
+                <Share2 className="w-4 h-4 text-[#FF007A]" />
+                <span>SHARE TO X / TWEET (#FrameInGoa)</span>
+              </button>
+
               <button
                 onClick={handleCopyCaption}
                 className="w-full py-2.5 rounded bg-[#FFE500] text-[#092F24] font-mono-tech font-bold text-xs hover:bg-[#FF007A] hover:text-white transition-all flex items-center justify-center gap-2 shadow-[2px_2px_0px_#000]"

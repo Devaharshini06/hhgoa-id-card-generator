@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Camera, Trash2, RefreshCw, User, Sparkles } from 'lucide-react';
+import { Upload, Camera, Trash2, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
+import heic2any from 'heic2any';
 
 interface ImageUploaderProps {
   image: string | null;
@@ -16,12 +17,41 @@ const DEFAULT_AVATARS = [
 export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
+    const fileName = file.name.toLowerCase();
+    const isHeic = fileName.endsWith('.heic') || fileName.endsWith('.heif') || file.type.includes('heic') || file.type.includes('heif');
+
+    if (isHeic) {
+      try {
+        setIsConverting(true);
+        const convertedBlob = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.9,
+        });
+        const blobToRead = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          onImageChange(e.target?.result as string);
+          setIsConverting(false);
+        };
+        reader.readAsDataURL(blobToRead);
+        return;
+      } catch (error) {
+        console.error('Error converting HEIC image:', error);
+        setIsConverting(false);
+        alert('Could not convert HEIC photo. Please try a JPG or PNG.');
+        return;
+      }
+    }
+
     if (!file.type.startsWith('image/')) {
-      alert('Please upload a valid image file (PNG, JPG, WebP).');
+      alert('Please upload a valid photo (JPG, PNG, WebP, HEIC).');
       return;
     }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       onImageChange(e.target?.result as string);
@@ -79,7 +109,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => !isConverting && fileInputRef.current?.click()}
         className={`relative border-2 border-dashed rounded-lg p-4 cursor-pointer transition-all flex flex-col items-center justify-center text-center ${
           isDragging
             ? 'border-[#00FF66] bg-[#00FF66]/10 scale-[1.01]'
@@ -88,13 +118,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
             : 'border-[#FFE500]/30 bg-[#092F24]/60 hover:border-[#FFE500] hover:bg-[#005c33]/30'
         }`}
       >
-        {image ? (
+        {isConverting ? (
+          <div className="py-2 flex flex-col items-center gap-2 text-[#FFE500]">
+            <Loader2 className="w-6 h-6 animate-spin text-[#FF007A]" />
+            <p className="text-xs font-mono-tech font-bold">Processing iPhone HEIC Photo...</p>
+          </div>
+        ) : image ? (
           <div className="flex items-center gap-4 w-full">
             <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#FFE500] shrink-0 shadow-[2px_2px_0px_#FF007A]">
               <img src={image} alt="Hacker Profile" className="w-full h-full object-cover" />
             </div>
             <div className="text-left flex-1 min-w-0">
-              <p className="text-xs font-mono-tech font-bold text-[#FFE500] truncate">Photo Uploaded</p>
+              <p className="text-xs font-mono-tech font-bold text-[#FFE500] truncate">Photo Ready</p>
               <p className="text-[11px] font-sans-ui text-[#FFF5C7]/70">Click or drag another image to replace</p>
             </div>
             <button
@@ -119,7 +154,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({ image, onImageChan
                 Drag & drop your photo or <span className="text-[#FFE500] underline">browse</span>
               </p>
               <p className="text-[10px] font-sans-ui text-[#FFF5C7]/60 mt-0.5">
-                PNG, JPG or WebP (Client-side processed)
+                PNG, JPG, WebP, HEIC (iPhone photos supported)
               </p>
             </div>
           </div>
